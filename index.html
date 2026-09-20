@@ -1,0 +1,398 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>keiba_ai 予想</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', 'Hiragino Sans', sans-serif; min-height: 100vh; }
+.site-header { background: linear-gradient(135deg, #16213e 0%, #0f3460 100%); padding: 16px 20px; border-bottom: 3px solid #e94560; box-shadow: 0 2px 20px rgba(233,69,96,0.3); }
+.site-header h1 { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: 2px; }
+.site-header h1 span { color: #e94560; }
+.header-sub { font-size: 11px; color: #8892b0; margin-top: 4px; }
+.header-date { font-size: 13px; color: #ccd6f6; margin-top: 2px; }
+.container { max-width: 900px; margin: 0 auto; padding: 16px; }
+.admin-toggle { text-align: right; margin-bottom: 8px; }
+.admin-toggle button { background: none; border: 1px solid #1e293b; color: #334155; padding: 4px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+.admin-toggle button:hover { border-color: #e94560; color: #e94560; }
+#pwAreaWrap { display:none; background:#16213e; border:1px solid #334155; border-radius:8px; padding:14px; margin-bottom:12px; }
+#pwArea { display:flex; gap:8px; margin-bottom:6px; }
+#pwInput { flex:1; background:#0f172a; border:1px solid #334155; border-radius:6px; color:#e0e0e0; padding:8px 12px; font-size:13px; }
+#pwInput:focus { outline: none; border-color: #e94560; }
+#pwBtn { background:#0f3460; color:#ccd6f6; border:1px solid #334155; border-radius:6px; padding:8px 16px; cursor:pointer; font-size:13px; transition: all 0.2s; }
+#pwBtn:hover { background:#e94560; border-color:#e94560; }
+#pwError { color:#e94560; font-size:11px; display:none; margin-top:4px; }
+#lockMsg { color:#f59e0b; font-size:11px; display:none; margin-top:4px; }
+#adminArea { display:none; background:#16213e; border:1px solid #e94560; border-radius:10px; padding:16px; margin-bottom:16px; }
+#adminArea h3 { color:#e94560; font-size:13px; margin-bottom:10px; }
+#adminArea textarea { width:100%; background:#0f172a; border:1px solid #334155; border-radius:6px; color:#e0e0e0; padding:10px; font-family:monospace; font-size:11px; resize:vertical; }
+#adminArea textarea:focus { outline:none; border-color:#e94560; }
+.btn-primary { background:#e94560; color:white; border:none; padding:10px 24px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:13px; margin-top:10px; width:100%; transition: background 0.2s; }
+.btn-primary:hover { background:#c73652; }
+.btn-clear { background:none; border:1px solid #334155; color:#64748b; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:12px; margin-top:8px; width:100%; transition: all 0.2s; }
+.btn-clear:hover { border-color:#e94560; color:#e94560; }
+.summary-box { background:#16213e; border:1px solid #e94560; border-radius:10px; padding:14px; margin-bottom:16px; }
+.summary-box h2 { color:#e94560; font-size:14px; font-weight:bold; margin-bottom:10px; }
+.summary-item { display:flex; align-items:center; gap:10px; padding:8px 10px; background:#0f172a; border-radius:6px; margin-bottom:6px; flex-wrap:wrap; }
+.race-card { background:#16213e; border-radius:10px; margin-bottom:14px; overflow:hidden; border:1px solid #1e3a5f; }
+.race-card.venue-nakayama { border-top:3px solid #3b82f6; }
+.race-card.venue-hanshin  { border-top:3px solid #a855f7; }
+.race-card.venue-sapporo  { border-top:3px solid #22c55e; }
+.race-card.venue-tokyo    { border-top:3px solid #f59e0b; }
+.race-card.venue-niigata  { border-top:3px solid #ec4899; }
+.race-card.venue-other    { border-top:3px solid #64748b; }
+.race-header { background:#0f172a; padding:10px 14px; }
+.race-title { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:6px; }
+.race-venue { font-size:16px; font-weight:900; color:#fff; }
+.race-id { font-size:10px; color:#475569; font-family:monospace; }
+.race-meta { display:flex; flex-wrap:wrap; gap:12px; font-size:11px; color:#64748b; }
+.race-meta span { color:#94a3b8; }
+.d12-high { color:#22c55e !important; font-weight:bold; }
+.data-warn { color:#f59e0b !important; }
+.badge { display:inline-block; padding:2px 7px; border-radius:9999px; font-size:10px; font-weight:bold; }
+.badge-ana     { background:#7c3aed; color:#fff; }
+.badge-yuuryoku{ background:#1d4ed8; color:#fff; }
+.badge-chumoku { background:#b45309; color:#fff; }
+.badge-flat    { background:#374151; color:#9ca3af; }
+.badge-gi      { background:#7f1d1d; color:#fca5a5; }
+.badge-gii     { background:#92400e; color:#fbbf24; }
+.badge-giii    { background:#1e3a5f; color:#93c5fd; }
+.badge-rec     { background:#065f46; color:#6ee7b7; }
+.horse-table { width:100%; border-collapse:collapse; }
+.horse-row { border-bottom:1px solid #1e293b; transition:background 0.15s; }
+.horse-row:hover { background:rgba(255,255,255,0.03); }
+.horse-row.rank1 { background:rgba(239,68,68,0.12); border-left:3px solid #ef4444; }
+.horse-row.rank2 { background:rgba(59,130,246,0.08); border-left:3px solid #3b82f6; }
+.horse-row.rank3 { background:rgba(34,197,94,0.06); border-left:3px solid #22c55e; }
+.horse-row.no-data { opacity:0.35; }
+.horse-table td { padding:7px 8px; vertical-align:middle; font-size:12px; }
+.horse-table th { padding:4px 8px; font-size:10px; color:#475569; background:#0a0f1e; font-weight:normal; text-align:left; }
+.th-center { text-align:center !important; }
+.th-right  { text-align:right  !important; }
+.waku { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:4px; font-size:11px; font-weight:bold; }
+.waku-1{background:#f0f0f0;color:#333;}
+.waku-2{background:#222;color:#fff;border:1px solid #555;}
+.waku-3{background:#e53e3e;color:#fff;}
+.waku-4{background:#3182ce;color:#fff;}
+.waku-5{background:#d69e2e;color:#fff;}
+.waku-6{background:#38a169;color:#fff;}
+.waku-7{background:#dd6b20;color:#fff;}
+.waku-8{background:#d53f8c;color:#fff;}
+.umaban { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:#1e293b; font-size:11px; font-weight:bold; color:#cbd5e1; }
+.pop-1 { color:#ef4444; font-weight:900; font-size:13px; }
+.pop-2 { color:#f97316; font-weight:700; }
+.pop-3 { color:#eab308; font-weight:600; }
+.pop-other { color:#94a3b8; }
+.odds-low  { color:#ef4444; font-weight:bold; }
+.odds-normal { color:#94a3b8; }
+.score-wrap { display:flex; flex-direction:column; gap:2px; }
+.score-val { font-size:11px; color:#cbd5e1; font-family:monospace; }
+.score-bar-bg { height:3px; background:#1e293b; border-radius:2px; }
+.score-bar { height:3px; background:linear-gradient(90deg,#3b82f6,#8b5cf6); border-radius:2px; }
+.jockey { color:#64748b; font-size:11px; }
+.site-footer { text-align:center; padding:20px; color:#334155; font-size:11px; margin-top:20px; border-top:1px solid #1e293b; }
+@media (max-width:600px) {
+  .race-meta { gap:6px; }
+  .horse-table td { padding:5px 4px; font-size:11px; }
+  .site-header h1 { font-size:20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="site-header">
+  <div style="max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+    <div>
+      <h1>🏇 keiba<span>_ai</span> 予想</h1>
+      <div class="header-sub">model_v16 | features_v10 | LightGBM</div>
+      <div class="header-date" id="headerDate"></div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:11px;color:#8892b0;">Powered by AI</div>
+      <div style="font-size:10px;color:#475569;margin-top:2px;">© keiba_ai 2026</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="admin-toggle">
+    <button onclick="togglePwArea()" id="adminBtn">⚙</button>
+  </div>
+
+  <div id="pwAreaWrap">
+    <div style="font-size:12px;color:#8892b0;margin-bottom:8px;">🔒 管理者ログイン</div>
+    <div id="pwArea">
+      <input type="password" id="pwInput" placeholder="パスワード" onkeydown="if(event.key==='Enter')checkPw()">
+      <button id="pwBtn" onclick="checkPw()">ログイン</button>
+    </div>
+    <div id="pwError">❌ パスワードが違います</div>
+    <div id="lockMsg">🔒 連続失敗によりロックされました。しばらくお待ちください。</div>
+  </div>
+
+  <div id="adminArea">
+    <h3>📋 予想テキストを貼り付け</h3>
+    <textarea id="inputText" rows="8" placeholder="predict_all_xxxx.py の出力結果をここにペーストしてください..."></textarea>
+    <button class="btn-primary" onclick="parseAndRender()">🔍 予想を表示する</button>
+    <button class="btn-clear" onclick="clearAll()">クリア</button>
+  </div>
+
+  <div id="summaryArea" class="summary-box" style="display:none;">
+    <h2>💰 推奨買い目まとめ</h2>
+    <div id="summaryList"></div>
+  </div>
+
+  <div id="outputArea"></div>
+</div>
+
+<div class="site-footer">
+  keiba_ai © 2026 | 予想は参考情報です。馬券の購入は自己責任でお願いします。
+</div>
+
+<script>
+// セキュリティ設定
+const PW_HASH = '7a4e9f2b8c1d3e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9'; // SHA-256プレースホルダー
+const MAX_ATTEMPTS = 3;
+const LOCK_DURATION = 5 * 60 * 1000; // 5分
+let attempts = 0;
+let lockUntil = 0;
+
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// 実際のハッシュ（Tagu1229のSHA-256）
+const CORRECT_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // placeholder
+// 正しいハッシュを起動時に生成
+let correctHash = '';
+sha256('Tagu1229').then(h => { correctHash = h; });
+
+function togglePwArea() {
+  const el = document.getElementById('pwAreaWrap');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function checkPw() {
+  const now = Date.now();
+  if (now < lockUntil) {
+    const remaining = Math.ceil((lockUntil - now) / 1000);
+    document.getElementById('lockMsg').style.display = 'block';
+    document.getElementById('lockMsg').textContent = `🔒 ロック中 あと${remaining}秒`;
+    document.getElementById('pwError').style.display = 'none';
+    return;
+  }
+
+  const val = document.getElementById('pwInput').value;
+  const inputHash = await sha256(val);
+
+  if (inputHash === correctHash) {
+    attempts = 0;
+    document.getElementById('pwAreaWrap').style.display = 'none';
+    document.getElementById('adminArea').style.display = 'block';
+    document.getElementById('pwError').style.display = 'none';
+    document.getElementById('lockMsg').style.display = 'none';
+    document.getElementById('adminBtn').style.display = 'none';
+  } else {
+    attempts++;
+    document.getElementById('pwInput').value = '';
+    if (attempts >= MAX_ATTEMPTS) {
+      lockUntil = Date.now() + LOCK_DURATION;
+      document.getElementById('lockMsg').style.display = 'block';
+      document.getElementById('pwError').style.display = 'none';
+      document.getElementById('pwBtn').disabled = true;
+      setTimeout(() => {
+        attempts = 0;
+        lockUntil = 0;
+        document.getElementById('pwBtn').disabled = false;
+        document.getElementById('lockMsg').style.display = 'none';
+      }, LOCK_DURATION);
+    } else {
+      document.getElementById('pwError').style.display = 'block';
+      document.getElementById('pwError').textContent = `❌ パスワードが違います（残り${MAX_ATTEMPTS - attempts}回）`;
+    }
+  }
+}
+
+function clearAll() {
+  document.getElementById('inputText').value = '';
+  document.getElementById('outputArea').innerHTML = '';
+  document.getElementById('summaryArea').style.display = 'none';
+}
+
+
+function getWakuFromBanNum(num, total) {
+  num = parseInt(num); total = parseInt(total);
+  if (!num || !total) return 1;
+  if (total <= 8) return num;
+  if (total <= 15) {
+    const border = 16 - total;
+    if (num <= border) return num;
+    return border + Math.ceil((num - border) / 2);
+  }
+  if (total === 16) return Math.ceil(num / 2);
+  if (total === 17) {
+    if (num <= 14) return Math.ceil(num / 2);
+    return 8;
+  }
+  if (total === 18) {
+    if (num <= 12) return Math.ceil(num / 2);
+    if (num <= 15) return 7;
+    return 8;
+  }
+  return Math.min(Math.ceil(num / 2), 8);
+}
+function wakuClass(w) { return `waku waku-${Math.min(parseInt(w)||1,8)}`; }
+function popClass(p)  { return p==1?'pop-1':p==2?'pop-2':p==3?'pop-3':'pop-other'; }
+function oddsClass(odds) { return parseFloat(odds) <= 10.0 ? 'odds-low' : 'odds-normal'; }
+function venueColor(v) {
+  return 'venue-'+({'中山':'nakayama','阪神':'hanshin','札幌':'sapporo','東京':'tokyo','新潟':'niigata'}[v]||'other');
+}
+
+function parseAndRender() {
+  const text = document.getElementById('inputText').value;
+  if (!text.trim()) return;
+  const lines = text.split('\n');
+  const output = document.getElementById('outputArea');
+  output.innerHTML = '';
+
+  const dateMatch = text.match(/20\d\d\/\d{2}\/\d{2}/);
+  if (dateMatch) document.getElementById('headerDate').textContent = dateMatch[0] + ' 全場予測';
+
+  const blocks = [];
+  let current = [];
+  for (const line of lines) {
+    if (line.includes('【') && line.includes('】') && current.length > 0) {
+      blocks.push(current); current = [line];
+    } else { current.push(line); }
+  }
+  if (current.length > 0) blocks.push(current);
+
+  const recommendations = [];
+
+  for (const block of blocks) {
+    const headerLine = block[0] || '';
+    if (!headerLine.includes('【')) continue;
+
+    const venueMatch = headerLine.match(/【(.+?)】/);
+    const rMatch     = headerLine.match(/(\d+)R/);
+    const raceIdMatch= headerLine.match(/\d{12}/);
+    const venue  = venueMatch  ? venueMatch[1]  : '?';
+    const rNum   = rMatch      ? rMatch[1]+'R'  : '';
+    const raceId = raceIdMatch ? raceIdMatch[0] : '';
+
+    const infoLine  = block.find(l=>l.includes('m('))||(block.find(l=>l.includes('m')&&l.includes('頭'))||'');
+    const distMatch = infoLine.match(/([芝ダ障])(\d+)m\((.+?)\)/);
+    const headMatch = infoLine.match(/(\d+)頭/);
+    const dataMatch = infoLine.match(/データあり:(\d+)\/(\d+)/);
+
+    const surface = distMatch ? distMatch[1] : '';
+    const dist    = distMatch ? distMatch[2] : '';
+    const distGrp = distMatch ? distMatch[3] : '';
+    const heads   = headMatch ? headMatch[1] : '?';
+    const totalHorses = headMatch ? parseInt(headMatch[1]) : 8;
+    const dataOk  = dataMatch ? dataMatch[1] : '?';
+    const dataTotal = dataMatch ? dataMatch[2] : '?';
+    const dataRate  = dataMatch ? Math.round(parseInt(dataMatch[1])/parseInt(dataMatch[2])*100) : 100;
+
+    const diffLine  = block.find(l=>l.includes('スコア差'))||'';
+    const diff12 = parseFloat((diffLine.match(/1-2位:([\d.]+)/)||[])[1]||0);
+    const diff13 = parseFloat((diffLine.match(/1-3位:([\d.]+)/)||[])[1]||0);
+
+    const judge  = headerLine.includes('有力')?'有力':headerLine.includes('注目')?'注目':'フラット';
+    const isAna  = headerLine.includes('[穴]');
+    const isGI   = headerLine.includes('GI]')  && !headerLine.includes('GII');
+    const isGII  = headerLine.includes('GII]') && !headerLine.includes('GIII');
+    const isGIII = headerLine.includes('GIII]');
+
+    const horses = [];
+    for (const line of block) {
+      // 枠番あり: 順 枠 馬番 馬名 スコア 人気 オッズ 騎手
+      let m = line.match(/^\s+(\d+|--)\s+(\d+)\s+(\d+)\s+(.+?)\s{2,}([\d.]+|\[データなし\])\s+(\d+|--)?\s+([\d.]+|---)\s+(.*)/);
+      if (m) {
+        horses.push({rank:m[1],waku:m[2],num:m[3],name:m[4].trim(),
+          score:m[5]==='[データなし]'?null:parseFloat(m[5]),
+          pop:m[6]||'--',odds:m[7],jockey:m[8].trim(),
+          noData:m[5]==='[データなし]',isAnaHorse:line.includes('穴')&&m[5]!=='[データなし]'});
+        continue;
+      }
+      // 枠番なし
+      m = line.match(/^\s+(\d+|--)\s+(\d+)\s+(.+?)\s{2,}([\d.]+|\[データなし\])\s+(\d+|--)?\s+([\d.]+|---)\s+(.*)/);
+      if (m) {
+        const num = m[2];
+        horses.push({rank:m[1],waku:getWakuFromBanNum(num, totalHorses),num,name:m[3].trim(),
+          score:m[4]==='[データなし]'?null:parseFloat(m[4]),
+          pop:m[5]||'--',odds:m[6],jockey:m[7].trim(),
+          noData:m[4]==='[データなし]',isAnaHorse:line.includes('穴')&&m[4]!=='[データなし]'});
+      }
+    }
+
+    const maxScore = Math.max(...horses.filter(h=>h.score!==null).map(h=>h.score), 1);
+    const isRec = (surface==='芝'&&diff12>=0.10)||diff12>=0.15||(venue==='札幌'&&diff12>=0.05)||(horses[0]&&horses[0].pop=='1'&&diff12>=0.20);
+    const recStr = diff12>=0.20?'★★★':diff12>=0.15?'★★':diff12>=0.10?'★':'';
+    if (isRec && horses[0]) recommendations.push({venue,rNum,raceId,horse:horses[0],diff12,surface,dist,recStr});
+
+    let card = `<div class="race-card ${venueColor(venue)}">
+      <div class="race-header">
+        <div class="race-title">
+          <span class="race-venue">${venue} ${rNum}</span>
+          <span class="race-id">${raceId}</span>
+          ${judge==='有力'?'<span class="badge badge-yuuryoku">有力</span>':judge==='注目'?'<span class="badge badge-chumoku">注目</span>':'<span class="badge badge-flat">フラット</span>'}
+          ${isAna?'<span class="badge badge-ana">穴</span>':''}
+          ${isGI?'<span class="badge badge-gi">GI</span>':''}
+          ${isGII?'<span class="badge badge-gii">GII</span>':''}
+          ${isGIII?'<span class="badge badge-giii">GIII</span>':''}
+          ${isRec?`<span class="badge badge-rec">${recStr}推奨</span>`:''}
+        </div>
+        <div class="race-meta">
+          <span>${surface}${dist}m（${distGrp}）</span>
+          <span>${heads}頭</span>
+          <span class="${dataRate<70?'data-warn':''}">データ ${dataOk}/${dataTotal}${dataRate<70?' ⚠':''}</span>
+          <span>d12: <span class="${diff12>=0.10?'d12-high':''}">${diff12.toFixed(4)}</span></span>
+          <span>d13: ${diff13.toFixed(4)}</span>
+        </div>
+      </div>
+      <table class="horse-table">
+        <tr><th>順</th><th>枠</th><th>馬番</th><th>馬名</th><th>スコア</th><th class="th-center">人気</th><th class="th-right">オッズ</th><th>騎手</th></tr>`;
+
+    for (const h of horses) {
+      const rankClass = h.rank=='1'?'rank1':h.rank=='2'?'rank2':h.rank=='3'?'rank3':'';
+      const barW = h.score!==null ? Math.round((h.score/maxScore)*100) : 0;
+      card += `<tr class="horse-row ${rankClass} ${h.noData?'no-data':''}">
+        <td style="color:#475569;text-align:right;width:28px;">${h.rank}</td>
+        <td style="width:30px;"><span class="${wakuClass(h.waku)}">${h.waku}</span></td>
+        <td style="width:32px;"><span class="umaban">${h.num}</span></td>
+        <td class="horse-name">${h.name}</td>
+        <td style="width:110px;">${h.noData
+          ?'<span style="color:#334155;font-size:10px;">データなし</span>'
+          :`<div class="score-wrap"><div class="score-val">${h.score.toFixed(4)}</div><div class="score-bar-bg"><div class="score-bar" style="width:${barW}%"></div></div></div>`}</td>
+        <td style="text-align:center;width:40px;"><span class="${popClass(parseInt(h.pop)||99)}">${h.pop}</span></td>
+        <td style="text-align:right;width:60px;"><span class="${oddsClass(h.odds)}">${h.odds}</span></td>
+        <td class="jockey">${h.jockey.replace(/\s*穴/g,'').trim()}</td>
+      </tr>`;
+    }
+    card += `</table></div>`;
+    output.innerHTML += card;
+  }
+
+  if (recommendations.length > 0) {
+    document.getElementById('summaryArea').style.display = 'block';
+    document.getElementById('summaryList').innerHTML = recommendations.map(r=>`
+      <div class="summary-item">
+        <span class="badge badge-rec">${r.recStr}</span>
+        <span style="color:#fff;font-weight:bold;">【${r.venue}】${r.rNum}</span>
+        <span style="color:#cbd5e1;">${r.horse.num}番 <strong>${r.horse.name}</strong></span>
+        <span style="color:#64748b;font-size:11px;">${r.surface}${r.dist}m</span>
+        <span style="color:#22c55e;font-size:11px;font-family:monospace;">d12=${r.diff12.toFixed(4)}</span>
+      </div>`).join('');
+  }
+}
+
+document.getElementById('headerDate').textContent =
+  new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'})+'  予想';
+</script>
+</body>
+</html>
