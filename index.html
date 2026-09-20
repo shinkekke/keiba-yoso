@@ -393,6 +393,20 @@ function parseAndRender() {
 
 document.getElementById('headerDate').textContent =
   new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'short'})+'  予想';
+
+// 起動時にlatest.txtを自動読み込み
+window.addEventListener('load', function() {
+  fetch('latest.txt?t=' + Date.now())
+    .then(function(r) { return r.ok ? r.text() : null; })
+    .then(function(text) {
+      if (text && text.trim()) {
+        var el = document.getElementById('inputText');
+        if (el) el.value = text;
+        parseAndRender();
+      }
+    })
+    .catch(function() {});
+});
 </script>
 </body>
 </html>
